@@ -5,8 +5,7 @@ import android.util.Log
 import org.jetbrains.annotations.NonNls
 import java.io.PrintWriter
 import java.io.StringWriter
-import java.util.ArrayList
-import java.util.Collections
+import java.util.*
 import java.util.Collections.unmodifiableList
 import java.util.regex.Pattern
 
@@ -31,119 +30,62 @@ class Timber private constructor() {
         return tag
       }
 
-    /** Log a verbose message with optional format args. */
-    open fun v(message: String?, vararg args: Any?) {
-      prepareLog(Log.VERBOSE, null, message, *args)
+    open fun d(produceMsg: () -> String?) {
+      d(t = null, message = produceMsg())
     }
 
-    /** Log a verbose exception and a message with optional format args. */
-    open fun v(t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(Log.VERBOSE, t, message, *args)
+    open fun d(t: Throwable?, produceMsg: () -> String?) {
+      d(t = t, message = produceMsg())
     }
 
-    /** Log a verbose exception. */
-    open fun v(t: Throwable?) {
-      prepareLog(Log.VERBOSE, t, null)
+    internal fun d(t: Throwable?, message: String?) {
+      prepareLog(Log.DEBUG, t, message)
     }
 
-    /** Log a debug message with optional format args. */
-    open fun d(message: String?, vararg args: Any?) {
-      prepareLog(Log.DEBUG, null, message, *args)
+    open fun w(produceMsg: () -> String?) {
+      w(t = null, message = produceMsg())
     }
 
-    /** Log a debug exception and a message with optional format args. */
-    open fun d(t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(Log.DEBUG, t, message, *args)
+    open fun w(t: Throwable?, produceMsg: () -> String?) {
+      w(t = t, message = produceMsg())
     }
 
-    /** Log a debug exception. */
-    open fun d(t: Throwable?) {
-      prepareLog(Log.DEBUG, t, null)
+    internal fun w(t: Throwable?, message: String?) {
+      prepareLog(Log.WARN, t, message)
     }
 
-    /** Log an info message with optional format args. */
-    open fun i(message: String?, vararg args: Any?) {
-      prepareLog(Log.INFO, null, message, *args)
+    open fun e(produceMsg: () -> String?) {
+      e(t = null, message = produceMsg())
     }
 
-    /** Log an info exception and a message with optional format args. */
-    open fun i(t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(Log.INFO, t, message, *args)
+    open fun e(t: Throwable?, produceMsg: () -> String?) {
+      e(t = t, message = produceMsg())
     }
 
-    /** Log an info exception. */
-    open fun i(t: Throwable?) {
-      prepareLog(Log.INFO, t, null)
+    internal fun e(t: Throwable?, message: String?) {
+      prepareLog(Log.ERROR, t, message)
     }
 
-    /** Log a warning message with optional format args. */
-    open fun w(message: String?, vararg args: Any?) {
-      prepareLog(Log.WARN, null, message, *args)
+    open fun wtf(produceMsg: () -> String?) {
+      wtf(t = null, message = produceMsg())
     }
 
-    /** Log a warning exception and a message with optional format args. */
-    open fun w(t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(Log.WARN, t, message, *args)
+    open fun wtf(t: Throwable?, produceMsg: () -> String?) {
+      wtf(t = t, message = produceMsg())
     }
 
-    /** Log a warning exception. */
-    open fun w(t: Throwable?) {
-      prepareLog(Log.WARN, t, null)
-    }
-
-    /** Log an error message with optional format args. */
-    open fun e(message: String?, vararg args: Any?) {
-      prepareLog(Log.ERROR, null, message, *args)
-    }
-
-    /** Log an error exception and a message with optional format args. */
-    open fun e(t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(Log.ERROR, t, message, *args)
-    }
-
-    /** Log an error exception. */
-    open fun e(t: Throwable?) {
-      prepareLog(Log.ERROR, t, null)
-    }
-
-    /** Log an assert message with optional format args. */
-    open fun wtf(message: String?, vararg args: Any?) {
-      prepareLog(Log.ASSERT, null, message, *args)
-    }
-
-    /** Log an assert exception and a message with optional format args. */
-    open fun wtf(t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(Log.ASSERT, t, message, *args)
-    }
-
-    /** Log an assert exception. */
-    open fun wtf(t: Throwable?) {
-      prepareLog(Log.ASSERT, t, null)
-    }
-
-    /** Log at `priority` a message with optional format args. */
-    open fun log(priority: Int, message: String?, vararg args: Any?) {
-      prepareLog(priority, null, message, *args)
-    }
-
-    /** Log at `priority` an exception and a message with optional format args. */
-    open fun log(priority: Int, t: Throwable?, message: String?, vararg args: Any?) {
-      prepareLog(priority, t, message, *args)
-    }
-
-    /** Log at `priority` an exception. */
-    open fun log(priority: Int, t: Throwable?) {
-      prepareLog(priority, t, null)
+    internal fun wtf(t: Throwable?, message: String?) {
+      prepareLog(Log.ASSERT, t, message)
     }
 
     /** Return whether a message at `priority` should be logged. */
     @Deprecated("Use isLoggable(String, int)", ReplaceWith("this.isLoggable(null, priority)"))
-    protected open fun isLoggable(priority: Int) = true
+    open fun isLoggable(priority: Int) = true
 
     /** Return whether a message at `priority` or `tag` should be logged. */
-    protected open fun isLoggable(tag: String?, priority: Int) = isLoggable(priority)
+    open fun isLoggable(tag: String?, priority: Int) = isLoggable(priority)
 
-    private fun prepareLog(priority: Int, t: Throwable?, message: String?, vararg args: Any?) {
+    private fun prepareLog(priority: Int, t: Throwable?, message: String?) {
       // Consume tag even when message is not loggable so that next message is correctly tagged.
       val tag = tag
       if (!isLoggable(tag, priority)) {
@@ -157,9 +99,6 @@ class Timber private constructor() {
         }
         message = getStackTraceString(t)
       } else {
-        if (args.isNotEmpty()) {
-          message = formatMessage(message, args)
-        }
         if (t != null) {
           message += "\n" + getStackTraceString(t)
         }
@@ -167,9 +106,6 @@ class Timber private constructor() {
 
       log(priority, tag, message, t)
     }
-
-    /** Formats a log message with optional arguments. */
-    protected open fun formatMessage(message: String, args: Array<out Any?>) = message.format(*args)
 
     private fun getStackTraceString(t: Throwable): String {
       // Don't replace this with Log.getStackTraceString() - it hides
@@ -272,114 +208,117 @@ class Timber private constructor() {
   }
 
   companion object Forest : Tree() {
-    /** Log a verbose message with optional format args. */
-    @JvmStatic override fun v(@NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.v(message, *args) }
+
+    override fun isLoggable(tag: String?, priority: Int): Boolean {
+      return treeCount > 0 && super.isLoggable(tag, priority)
     }
 
-    /** Log a verbose exception and a message with optional format args. */
-    @JvmStatic override fun v(t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.v(t, message, *args) }
-    }
-
-    /** Log a verbose exception. */
-    @JvmStatic override fun v(t: Throwable?) {
-      treeArray.forEach { it.v(t) }
-    }
-
-    /** Log a debug message with optional format args. */
-    @JvmStatic override fun d(@NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.d(message, *args) }
-    }
-
-    /** Log a debug exception and a message with optional format args. */
-    @JvmStatic override fun d(t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.d(t, message, *args) }
-    }
-
-    /** Log a debug exception. */
-    @JvmStatic override fun d(t: Throwable?) {
-      treeArray.forEach { it.d(t) }
-    }
-
-    /** Log an info message with optional format args. */
-    @JvmStatic override fun i(@NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.i(message, *args) }
-    }
-
-    /** Log an info exception and a message with optional format args. */
-    @JvmStatic override fun i(t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.i(t, message, *args) }
-    }
-
-    /** Log an info exception. */
-    @JvmStatic override fun i(t: Throwable?) {
-      treeArray.forEach { it.i(t) }
-    }
-
-    /** Log a warning message with optional format args. */
-    @JvmStatic override fun w(@NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.w(message, *args) }
-    }
-
-    /** Log a warning exception and a message with optional format args. */
-    @JvmStatic override fun w(t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.w(t, message, *args) }
-    }
-
-    /** Log a warning exception. */
-    @JvmStatic override fun w(t: Throwable?) {
-      treeArray.forEach { it.w(t) }
-    }
-
-    /** Log an error message with optional format args. */
-    @JvmStatic override fun e(@NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.e(message, *args) }
-    }
-
-    /** Log an error exception and a message with optional format args. */
-    @JvmStatic override fun e(t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.e(t, message, *args) }
-    }
-
-    /** Log an error exception. */
-    @JvmStatic override fun e(t: Throwable?) {
-      treeArray.forEach { it.e(t) }
-    }
-
-    /** Log an assert message with optional format args. */
-    @JvmStatic override fun wtf(@NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.wtf(message, *args) }
-    }
-
-    /** Log an assert exception and a message with optional format args. */
-    @JvmStatic override fun wtf(t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.wtf(t, message, *args) }
-    }
-
-    /** Log an assert exception. */
-    @JvmStatic override fun wtf(t: Throwable?) {
-      treeArray.forEach { it.wtf(t) }
-    }
-
-    /** Log at `priority` a message with optional format args. */
-    @JvmStatic override fun log(priority: Int, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.log(priority, message, *args) }
-    }
-
-    /** Log at `priority` an exception and a message with optional format args. */
     @JvmStatic
-    override fun log(priority: Int, t: Throwable?, @NonNls message: String?, vararg args: Any?) {
-      treeArray.forEach { it.log(priority, t, message, *args) }
+    override fun d(@NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.DEBUG)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.DEBUG)) {
+            msg = produceMsg()
+          }
+          it.d(t = null, msg)
+        }
+      }
     }
 
-    /** Log at `priority` an exception. */
-    @JvmStatic override fun log(priority: Int, t: Throwable?) {
-      treeArray.forEach { it.log(priority, t) }
+    @JvmStatic
+    override fun d(t: Throwable?, @NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.DEBUG)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.DEBUG)) {
+            msg = produceMsg()
+          }
+          it.d(t, msg)
+        }
+      }
+    }
+
+    @JvmStatic
+    override fun w(@NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.WARN)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.WARN)) {
+            msg = produceMsg()
+          }
+          it.w(t = null, msg)
+        }
+      }
+    }
+
+    @JvmStatic
+    override fun w(t: Throwable?, @NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.WARN)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.WARN)) {
+            msg = produceMsg()
+          }
+          it.w(t, msg)
+        }
+      }
+    }
+
+    @JvmStatic
+    override fun e(@NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.ERROR)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.ERROR)) {
+            msg = produceMsg()
+          }
+          it.e(t = null, msg)
+        }
+      }
+    }
+
+    @JvmStatic
+    override fun e(t: Throwable?, @NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.ERROR)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.ERROR)) {
+            msg = produceMsg()
+          }
+          it.e(t, msg)
+        }
+      }
+    }
+
+    @JvmStatic
+    override fun wtf(@NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.ASSERT)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.ASSERT)) {
+            msg = produceMsg()
+          }
+          it.wtf(t = null, msg)
+        }
+      }
+    }
+
+    @JvmStatic
+    override fun wtf(t: Throwable?, @NonNls produceMsg: () -> String?) {
+      if (isLoggable(null, Log.ASSERT)) {
+        var msg: String? = null
+        treeArray.forEach {
+          if (msg == null && it.isLoggable(null, Log.ASSERT)) {
+            msg = produceMsg()
+          }
+          it.wtf(t, msg)
+        }
+      }
     }
 
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-      throw AssertionError() // Missing override for log method.
+      // no op
     }
 
     /**

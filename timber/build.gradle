@@ -1,7 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'org.jetbrains.kotlin.android'
-apply plugin: 'com.vanniktech.maven.publish'
+//apply plugin: 'com.vanniktech.maven.publish'
 apply plugin: 'org.jetbrains.dokka' // Must be applied here for publish plugin.
+apply plugin: 'com.atlasv.android.plugin.publishlib'
 
 android {
   compileSdkVersion versions.compileSdk
